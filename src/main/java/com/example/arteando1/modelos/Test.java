@@ -22,9 +22,10 @@ public class Test {
     private String descripcion;
     @Column(name="dificultad")
     private String dificultad;
-    @Column(name="tipo")
-    private String tipo;
 
-    @Column(name = "puntos_por_pregunta")
-    private Integer puntosPorPregunta;
+    // 🔹 Relación con la tabla 'categorias'
+    @ManyToOne
+    @JoinColumn(name = "categorias_id", referencedColumnName = "id")
+    private Categoria categoria;
+
 }
