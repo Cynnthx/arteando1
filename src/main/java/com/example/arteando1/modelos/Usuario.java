@@ -1,6 +1,6 @@
 package com.example.arteando1.modelos;
 
-import com.example.arteando1.Enum.Rol;
+import com.example.arteando1.enums.Rol;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "usuarios", schema = "arteando", catalog = "postgres")
+@Table(name = "usuarios", schema = "app_arteando")
 @Getter
 @Setter
 @AllArgsConstructor
