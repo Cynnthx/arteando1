@@ -31,4 +31,6 @@ public class Usuario {
     @Column(nullable = false)
     private Rol rol = Rol.cliente;  // Valor por defecto
 
+    @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    private TokenAcceso token;
 }

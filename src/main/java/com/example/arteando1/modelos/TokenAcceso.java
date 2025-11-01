@@ -17,14 +17,12 @@ import java.time.LocalDateTime;
 public class TokenAcceso {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
     private Integer id;
 
     @Column(name = "token", nullable = false, length = 500, unique = true)
     @NotEmpty(message = "El token no puede estar vacío")
     private String token;
 
-    // Tu tabla usa "expiracion"
     @Column(name = "expiracion", nullable = false)
     @NotNull(message = "La expiración no puede ser nula")
     private LocalDateTime expiracion;
@@ -32,10 +30,9 @@ public class TokenAcceso {
     @Column(name = "es_valido", nullable = false)
     private boolean esValido = true;
 
-    // columna usuarios_id en la tabla
-    @ManyToOne(fetch = FetchType.LAZY)
+    // Relación uno a uno con Usuario
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "usuarios_id", nullable = false)
-    @NotNull(message = "El usuario no puede ser nulo")
     private Usuario usuario;
 
     @Override
