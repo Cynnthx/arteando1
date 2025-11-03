@@ -1,8 +1,7 @@
 package com.example.arteando1.dtos;
 
 import com.example.arteando1.modelos.Cliente;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,10 +17,8 @@ public class CrearClienteDTO {
     private String foto;
     private String direccion;
 
-    // Datos del Usuario (para creación)
-    private String email;
-    private String nickname;
-    private String contrasena;
+    private Integer usuarioId;
+
 
     public Cliente toEntity() {
         Cliente cliente = new Cliente();
