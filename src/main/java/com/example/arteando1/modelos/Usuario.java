@@ -40,7 +40,7 @@ public class Usuario implements UserDetails {
     @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private TokenAcceso token;
 
-    // 🔹 Métodos requeridos por UserDetails:
+    // Métodos requeridos por UserDetails:
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return Collections.singletonList(new SimpleGrantedAuthority(rol.name()));
