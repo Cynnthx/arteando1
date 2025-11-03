@@ -28,7 +28,6 @@ public class CategoriaServicio {
                 .collect(Collectors.toList());
     }
 
-
     /**
      * Crear una nueva categoría.
      */
