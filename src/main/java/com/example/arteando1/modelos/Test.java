@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "test", schema = "arteando", catalog = "postgres")
+@Table(name = "test", schema = "app_arteando")
 @Getter
 @Setter
 @AllArgsConstructor
@@ -23,7 +23,7 @@ public class Test {
     @Column(name="dificultad")
     private String dificultad;
 
-    // 🔹 Relación con la tabla 'categorias'
+    // Relación con la tabla 'categorias'
     @ManyToOne
     @JoinColumn(name = "categorias_id", referencedColumnName = "id")
     private Categoria categoria;
