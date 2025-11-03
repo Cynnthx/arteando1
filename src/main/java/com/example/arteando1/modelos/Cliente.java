@@ -22,7 +22,7 @@ public class Cliente {
 
     @Column(name = "apellidos", nullable = false, length=100)
     private String apellidos;
-
+    
     @Column(name = "dni", nullable = false, length=9, unique = true)
     private String dni;
 
