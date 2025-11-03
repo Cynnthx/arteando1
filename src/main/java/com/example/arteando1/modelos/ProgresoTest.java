@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "progreso_test", schema = "arteando", catalog = "postgres")
+@Table(name = "progreso_test", schema = "app_arteando")
 @Getter
 @Setter
 @AllArgsConstructor
@@ -20,11 +20,9 @@ public class ProgresoTest {
     @Column(name = "porcentaje_completado", nullable = false)
     private Integer porcentajeCompletado;
 
-    // 🔹 Relación con Usuario
     @ManyToOne
     @JoinColumn(name = "usuarios_id", referencedColumnName = "id", nullable = false)
     private Usuario usuario;
-    // 🔹 Relación con Test
     @ManyToOne
     @JoinColumn(name = "test_id", referencedColumnName = "id", nullable = false)
     private Test test;
