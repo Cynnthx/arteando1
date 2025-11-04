@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "puntaje_usuario", schema = "arteando", catalog = "postgres")
+@Table(name = "puntaje_usuario", schema = "app_arteando")
 @Getter
 @Setter
 @AllArgsConstructor
@@ -20,11 +20,9 @@ public class PuntajeUsuario {
     @Column(nullable = false)
     private Integer puntaje;
 
-    // 🔹 Relación con Usuario
     @ManyToOne
     @JoinColumn(name = "usuarios_id", referencedColumnName = "id", nullable = false)
     private Usuario usuario;
-    // 🔹 Relación con Test
     @ManyToOne
     @JoinColumn(name = "test_id", referencedColumnName = "id", nullable = false)
     private Test test;
