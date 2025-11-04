@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "respuestas_usuario", schema = "arteando", catalog = "postgres")
+@Table(name = "respuestas_usuario", schema = "app_arteando")
 @Getter
 @Setter
 @AllArgsConstructor
@@ -17,15 +17,12 @@ public class RespuestaUsuario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    // 🔹 Relación con Usuario
     @ManyToOne
     @JoinColumn(name = "usuarios_id", referencedColumnName = "id", nullable = false)
     private Usuario usuario;
-    // 🔹 Relación con Pregunta
     @ManyToOne
     @JoinColumn(name = "preguntas_id", referencedColumnName = "id", nullable = false)
     private Pregunta pregunta;
-    // 🔹 Relación con Opción (la elegida por el usuario)
     @ManyToOne
     @JoinColumn(name = "opciones_id", referencedColumnName = "id", nullable = false)
     private Opcion opcion;
