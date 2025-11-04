@@ -5,9 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
+// catalog = "postgres"
 @Entity
-@Table(name = "opciones", schema = "arteando", catalog = "postgres")
+@Table(name = "opciones", schema = "app_arteando")
 @Getter
 @Setter
 @AllArgsConstructor
@@ -24,7 +24,6 @@ public class Opcion {
     @Column(name = "es_correcta", nullable = false)
     private Boolean esCorrecta;
 
-    // 🔹 Relación con Pregunta
     @ManyToOne
     @JoinColumn(name = "preguntas_id", referencedColumnName = "id", nullable = false)
     private Pregunta pregunta;
