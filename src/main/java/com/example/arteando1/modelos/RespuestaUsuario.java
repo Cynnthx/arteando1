@@ -17,6 +17,7 @@ public class RespuestaUsuario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+
     @ManyToOne
     @JoinColumn(name = "usuarios_id", referencedColumnName = "id", nullable = false)
     private Usuario usuario;
