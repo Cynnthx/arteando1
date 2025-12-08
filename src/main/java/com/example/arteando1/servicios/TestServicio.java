@@ -1,11 +1,14 @@
 package com.example.arteando1.servicios;
 
 
-import com.example.arteando1.dtos.TestCrearDTO;
-import com.example.arteando1.dtos.TestDTO;
+import com.example.arteando1.dtos.*;
 import com.example.arteando1.modelos.Categoria;
+import com.example.arteando1.modelos.Opcion;
+import com.example.arteando1.modelos.Pregunta;
 import com.example.arteando1.modelos.Test;
 import com.example.arteando1.repositorios.CategoriaRepositorio;
+import com.example.arteando1.repositorios.OpcionRepositorio;
+import com.example.arteando1.repositorios.PreguntaRepositorio;
 import com.example.arteando1.repositorios.TestRepositorio;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,6 +22,8 @@ public class TestServicio {
 
     private final TestRepositorio testRepositorio;
     private final CategoriaRepositorio categoriaRepositorio;
+    private final OpcionRepositorio opcionRepositorio;
+    private final PreguntaRepositorio preguntaRepositorio;
 
     // Crear un nuevo test
     public TestDTO crearTest(TestCrearDTO dto) {
@@ -66,6 +71,34 @@ public class TestServicio {
         Test actualizado = testRepositorio.save(test);
         return new TestDTO(actualizado);
     }
+
+    public TestCompletoDTO obtenerTestCompleto(Integer testId) {
+        Test test = testRepositorio.findById(testId)
+                .orElseThrow(() -> new RuntimeException("Test no encontrado con ID " + testId));
+
+        List<Pregunta> preguntas = preguntaRepositorio.findByTestId(testId);
+
+        List<PreguntaConOpcionesDTO> preguntasDTO = preguntas.stream().map(p -> {
+            List<Opcion> opciones = opcionRepositorio.findByPreguntaId(p.getId());
+
+            return new PreguntaConOpcionesDTO(
+                    p.getId(),
+                    p.getTexto(),
+                    p.getImagen(),
+                    opciones.stream().map(OpcionDTO::new).toList()
+            );
+        }).toList();
+
+        return new TestCompletoDTO(
+                test.getId(),
+                test.getTitulo(),
+                test.getDescripcion(),
+                test.getDificultad(),
+                test.getCategoria().getId(),
+                preguntasDTO
+        );
+    }
+
 
     // liminar un test
     public void eliminarTest(Integer id) {

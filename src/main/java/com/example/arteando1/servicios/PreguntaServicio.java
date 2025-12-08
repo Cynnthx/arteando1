@@ -60,6 +60,13 @@ public class PreguntaServicio {
         return preguntaRepositorio.findById(id).map(PreguntaDTO::new);
     }
 
+    public List<PreguntaDTO> obtenerPorTest(Integer testId) {
+        return preguntaRepositorio.findByTestId(testId).stream()
+                .map(PreguntaDTO::new)
+                .toList();
+    }
+
+
     // Eliminar una pregunta
     public void eliminarPregunta(Integer id) {
         if (!preguntaRepositorio.existsById(id)) {
