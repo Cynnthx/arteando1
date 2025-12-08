@@ -44,6 +44,14 @@ public class PreguntaControlador {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    // Obtener preguntas por testId
+    @GetMapping("/test/{testId}")
+    public ResponseEntity<List<PreguntaDTO>> obtenerPorTest(@PathVariable Integer testId) {
+        List<PreguntaDTO> preguntas = preguntaServicio.obtenerPorTest(testId);
+        return ResponseEntity.ok(preguntas);
+    }
+
+
     // Eliminar
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarPregunta(@PathVariable Integer id) {

@@ -1,5 +1,6 @@
 package com.example.arteando1.controladores;
 
+import com.example.arteando1.dtos.TestCompletoDTO;
 import com.example.arteando1.dtos.TestCrearDTO;
 import com.example.arteando1.dtos.TestDTO;
 import com.example.arteando1.modelos.Test;
@@ -43,6 +44,13 @@ public class TestControlador {
         TestDTO actualizado = testServicio.actualizarTest(id, dto);
         return ResponseEntity.ok(actualizado);
     }
+
+    // Obtener un test completo con preguntas y opciones
+    @GetMapping("/{id}/completo")
+    public ResponseEntity<TestCompletoDTO> obtenerTestCompleto(@PathVariable Integer id) {
+        return ResponseEntity.ok(testServicio.obtenerTestCompleto(id));
+    }
+
 
     // Eliminar un test
     public ResponseEntity<Void> eliminarTest(@PathVariable Integer id) {
