@@ -1,6 +1,7 @@
 package com.example.arteando1.dtos;
 
 
+import com.example.arteando1.modelos.Usuario;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,4 +15,13 @@ public class UsuarioDTO {
     private String nombreUsuario;
     private String rol;
     private String contrasena;
+
+    // Constructor que recibe un Usuario y mapea los campos relevantes
+    public UsuarioDTO(Usuario usuario) {
+        this.id = usuario.getId();
+        this.email = usuario.getEmail();
+        this.nombreUsuario = usuario.getNombreUsuario();
+        this.rol = usuario.getRol().name();
+    }
+
 }
