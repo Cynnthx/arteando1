@@ -34,8 +34,8 @@ public class Usuario implements UserDetails {
     private String contrasena;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Rol rol = Rol.cliente;  // Valor por defecto
+    @Column(columnDefinition = "tipo_rol", nullable = false)
+    private Rol rol = Rol.cliente; // Valor por defecto
 
     @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private TokenAcceso token;
