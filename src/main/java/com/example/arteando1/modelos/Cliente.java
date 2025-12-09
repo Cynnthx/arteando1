@@ -32,8 +32,9 @@ public class Cliente {
     @Column(name = "direccion", length=150)
     private String direccion;
 
+
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "usuario_id", referencedColumnName = "id", nullable = false)
+    @JoinColumn(name = "usuarios_id", referencedColumnName = "id", nullable = false)
     private Usuario usuario;
 
 }
