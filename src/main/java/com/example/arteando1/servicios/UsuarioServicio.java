@@ -1,6 +1,7 @@
 package com.example.arteando1.servicios;
 
 import com.example.arteando1.dtos.AuthenticationDTO;
+import com.example.arteando1.dtos.RegistroDTO;
 import com.example.arteando1.dtos.UsuarioDTO;
 import com.example.arteando1.enums.Rol;
 import com.example.arteando1.modelos.Cliente;
@@ -40,6 +41,47 @@ public class UsuarioServicio implements UserDetailsService {
         return usuarioRepository.findTopByNombreUsuario(nickname)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
     }
+
+
+    public Usuario buscarPorEmail(String email) {
+        return usuarioRepository.findByEmail(email)
+                .orElse(null); // devuelve null si no encuentra
+    }
+
+    // Registro desde RegistroDTO
+    public AuthenticationDTO registerDesdeRegistroDTO(RegistroDTO dto) {
+        // Crear usuario
+        Usuario usuario = new Usuario();
+        usuario.setEmail(dto.getEmail());
+        usuario.setContrasena(passwordEncoder.encode(dto.getContrasena()));
+        usuario.setRol(Rol.cliente);
+
+        // Generar nombreUsuario único a partir de nombre y apellidos
+        String nombreUsuario = dto.getNombre().toLowerCase() + "." + dto.getApellidos().toLowerCase();
+        usuario.setNombreUsuario(nombreUsuario);
+
+        Usuario nuevoUsuario = usuarioRepository.save(usuario);
+
+        // Crear cliente
+        Cliente cliente = new Cliente();
+        cliente.setNombre(dto.getNombre());
+        cliente.setApellidos(dto.getApellidos());
+        cliente.setDni(dto.getDni());
+        cliente.setDireccion(dto.getDireccion());
+        cliente.setFoto(dto.getFoto());
+        cliente.setUsuario(nuevoUsuario);
+
+        clienteRepository.save(cliente);
+
+        // Generar JWT
+        String jwtToken = jwtServicio.generateToken(nuevoUsuario, nuevoUsuario.getId(), nuevoUsuario.getRol().name());
+
+        return AuthenticationDTO.builder()
+                .token(jwtToken)
+                .mensaje("Registro exitoso")
+                .build();
+    }
+
 
     public Usuario guardarUsuario(UsuarioDTO dto) {
         if (usuarioRepository.findTopByNombreUsuario(dto.getNombreUsuario()).isPresent()) {
