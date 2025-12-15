@@ -1,15 +1,13 @@
 package com.example.arteando1.servicios;
 
-import com.example.arteando1.dtos.AuthenticationDTO;
-import com.example.arteando1.dtos.RegistroDTO;
-import com.example.arteando1.dtos.UsuarioDTO;
+import com.example.arteando1.dtos.*;
 import com.example.arteando1.enums.Rol;
 import com.example.arteando1.modelos.Cliente;
-import com.example.arteando1.modelos.TokenAcceso;
 import com.example.arteando1.modelos.Usuario;
 import com.example.arteando1.repositorios.ClienteRepositorio;
 import com.example.arteando1.repositorios.UsuarioRepositorio;
 import com.example.arteando1.seguridad.JwtServicio;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -17,8 +15,11 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
-import java.time.LocalDateTime;
+
+
 import java.util.Optional;
 
 @Service
@@ -26,153 +27,255 @@ import java.util.Optional;
 public class UsuarioServicio implements UserDetailsService {
 
     private final UsuarioRepositorio usuarioRepository;
-    private final TokenAccesoServicio tokenService;
     private final PasswordEncoder passwordEncoder;
     private final JwtServicio jwtServicio;
     private final ClienteRepositorio clienteRepository;
 
+    // Spring Security autentica por EMAIL
     @Override
-    public UserDetails loadUserByUsername(String nombreUsuario) throws UsernameNotFoundException {
-        return usuarioRepository.findTopByNombreUsuario(nombreUsuario)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
-    }
-
-    public Usuario buscarUsuarioPorNickname(String nickname) {
-        return usuarioRepository.findTopByNombreUsuario(nickname)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
-    }
-
-
-    public Usuario buscarPorEmail(String email) {
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         return usuarioRepository.findByEmail(email)
-                .orElse(null); // devuelve null si no encuentra
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
     }
 
-    // Registro desde RegistroDTO
+    // Método para validar DNI/NIE
+    public boolean esDniNieValido(String dniNie) {
+        if (dniNie == null || dniNie.isBlank()) return false;
+
+        String letras = "TRWAGMYFPDXBNJZSQVHLCKE";
+        dniNie = dniNie.toUpperCase().trim();
+
+        // NIE: sustituir letra inicial por número
+        if (dniNie.matches("^[XYZ]\\d{7}[A-Z]$")) {
+            char letraInicial = dniNie.charAt(0);
+            String numero = switch (letraInicial) {
+                case 'X' -> "0";
+                case 'Y' -> "1";
+                case 'Z' -> "2";
+                default -> throw new IllegalStateException("Letra NIE inválida");
+            };
+            numero += dniNie.substring(1, 8);
+            int resto = Integer.parseInt(numero) % 23;
+            return dniNie.charAt(8) == letras.charAt(resto);
+        }
+
+        // DNI normal
+        if (dniNie.matches("^\\d{8}[A-Z]$")) {
+            int numero = Integer.parseInt(dniNie.substring(0, 8));
+            int resto = numero % 23;
+            return dniNie.charAt(8) == letras.charAt(resto);
+        }
+
+        return false;
+    }
+
+
+    // =========================
+    // REGISTRO CLIENTE
+    // =========================
     public AuthenticationDTO registerDesdeRegistroDTO(RegistroDTO dto) {
-        // Crear usuario
+
+        if (usuarioRepository.existsByEmail(dto.getEmail())) {
+            return AuthenticationDTO.crearError("El email ya está en uso");
+        }
+
         Usuario usuario = new Usuario();
         usuario.setEmail(dto.getEmail());
         usuario.setContrasena(passwordEncoder.encode(dto.getContrasena()));
         usuario.setRol(Rol.cliente);
 
-        // Generar nombreUsuario único a partir de nombre y apellidos
         String nombreUsuario = dto.getNombre().toLowerCase() + "." + dto.getApellidos().toLowerCase();
         usuario.setNombreUsuario(nombreUsuario);
 
-        Usuario nuevoUsuario = usuarioRepository.save(usuario);
+        usuarioRepository.save(usuario);
 
-        // Crear cliente
         Cliente cliente = new Cliente();
         cliente.setNombre(dto.getNombre());
         cliente.setApellidos(dto.getApellidos());
         cliente.setDni(dto.getDni());
         cliente.setDireccion(dto.getDireccion());
         cliente.setFoto(dto.getFoto());
-        cliente.setUsuario(nuevoUsuario);
+        cliente.setUsuario(usuario);
 
         clienteRepository.save(cliente);
 
-        // Generar JWT
-        String jwtToken = jwtServicio.generateToken(nuevoUsuario, nuevoUsuario.getId(), nuevoUsuario.getRol().name());
+        // Ajuste: usar la firma correcta de generateToken(UserDetails, Integer, String)
+        String token = jwtServicio.generateToken(usuario, usuario.getId(), usuario.getRol().name());
 
-        return AuthenticationDTO.builder()
-                .token(jwtToken)
-                .mensaje("Registro exitoso")
-                .build();
+        return AuthenticationDTO.crearExito(
+                token,
+                usuario.getId(),
+                usuario.getRol().name(),
+                usuario.getEmail(),
+                usuario.getNombreUsuario(),
+                cliente.getNombre() + " " + cliente.getApellidos(),
+                cliente.getId()
+        );
+    }
+
+    // =========================
+    // LOGIN
+    // =========================
+    public AuthenticationDTO login(LoginDTO loginRequest) {
+
+        Usuario usuario = usuarioRepository.findByEmail(loginRequest.getEmail())
+                .orElseThrow(() -> new RuntimeException("Credenciales inválidas"));
+
+        if (!passwordEncoder.matches(loginRequest.getContrasena(), usuario.getContrasena())) {
+            return AuthenticationDTO.crearError("Credenciales inválidas");
+        }
+
+        // Ajuste: usar la firma correcta de generateToken(UserDetails, Integer, String)
+        String token = jwtServicio.generateToken(usuario, usuario.getId(), usuario.getRol().name());
+
+        String nombreCompleto = null;
+        Integer clienteId = null;
+
+        if (usuario.getRol() == Rol.cliente) {
+            Optional<Cliente> clienteOpt = clienteRepository.findByUsuario(usuario);
+            if (clienteOpt.isPresent()) {
+                Cliente cliente = clienteOpt.get();
+                nombreCompleto = cliente.getNombre() + " " + cliente.getApellidos();
+                clienteId = cliente.getId();
+            }
+        }
+
+        return AuthenticationDTO.crearExito(
+                token,
+                usuario.getId(),
+                usuario.getRol().name(),
+                usuario.getEmail(),
+                usuario.getNombreUsuario(),
+                nombreCompleto,
+                clienteId
+        );
+    }
+
+    // =========================
+    // REGISTRO ADMIN
+    // =========================
+    public AuthenticationDTO registrarAdmin(AdminDTO registroDTO) {
+
+        if (usuarioRepository.existsByEmail(registroDTO.getEmail())) {
+            return AuthenticationDTO.crearError("El email ya está en uso");
+        }
+
+        Usuario usuario = new Usuario();
+        usuario.setEmail(registroDTO.getEmail());
+        usuario.setNombreUsuario(registroDTO.getNombre());
+        usuario.setContrasena(passwordEncoder.encode(registroDTO.getContrasena()));
+        usuario.setRol(Rol.admin);
+
+        usuarioRepository.save(usuario);
+
+        // Ajuste: usar la firma correcta de generateToken(UserDetails, Integer, String)
+        String token = jwtServicio.generateToken(usuario, usuario.getId(), usuario.getRol().name());
+
+        return AuthenticationDTO.crearExito(
+                token,
+                usuario.getId(),
+                usuario.getRol().name(),
+                usuario.getEmail(),
+                usuario.getNombreUsuario(),
+                null,
+                null
+        );
+    }
+
+    private Usuario obtenerUsuarioAutenticado() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated()) {
+            throw new RuntimeException("Usuario no autenticado");
+        }
+
+        String email = auth.getName(); // Spring Security usa el email como nombre de usuario
+
+        return usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no autenticado"));
+    }
+
+    public void actualizarUsuario(Usuario usuario) {
+        usuarioRepository.save(usuario);
     }
 
 
-    public Usuario guardarUsuario(UsuarioDTO dto) {
-        if (usuarioRepository.findTopByNombreUsuario(dto.getNombreUsuario()).isPresent()) {
-            throw new IllegalArgumentException("El nickname ya está en uso");
+    public CrearClienteDTO obtenerPerfilUsuario() {
+        Usuario usuario = obtenerUsuarioAutenticado();
+
+        Cliente cliente = clienteRepository.findByUsuario(usuario)
+                .orElseThrow(() -> new RuntimeException("Perfil de cliente no encontrado"));
+
+        CrearClienteDTO perfil = new CrearClienteDTO();
+
+        // Datos cliente
+        perfil.setNombre(cliente.getNombre());
+        perfil.setApellidos(cliente.getApellidos());
+        perfil.setDni(cliente.getDni());
+        perfil.setDireccion(cliente.getDireccion());
+        perfil.setFoto(cliente.getFoto());
+
+        // Datos usuario
+        perfil.setEmail(usuario.getEmail());
+        perfil.setNombreUsuario(usuario.getNombreUsuario());
+
+        return perfil;
+    }
+
+    @Transactional
+    public CrearClienteDTO actualizarPerfil(ActualizarPerfil request) {
+        Usuario usuario = obtenerUsuarioAutenticado();
+
+        Cliente cliente = clienteRepository.findByUsuario(usuario)
+                .orElseThrow(() -> new RuntimeException("Perfil no encontrado"));
+
+        if (!esDniNieValido(request.getDni())) {
+            throw new IllegalArgumentException("DNI o NIE no válido");
         }
+
+        cliente.setNombre(request.getNombre());
+        cliente.setApellidos(request.getApellidos());
+        cliente.setDireccion(request.getDireccion());
+        cliente.setFoto(request.getFoto());
+        cliente.setDni(request.getDni());
+
+        clienteRepository.save(cliente);
+
+        CrearClienteDTO dto = new CrearClienteDTO();
+        dto.setNombre(cliente.getNombre());
+        dto.setApellidos(cliente.getApellidos());
+        dto.setDni(cliente.getDni());
+        dto.setDireccion(cliente.getDireccion());
+        dto.setFoto(cliente.getFoto());
+        dto.setEmail(usuario.getEmail());
+        dto.setNombreUsuario(usuario.getNombreUsuario());
+
+        return dto;
+    }
+
+    public Usuario crearUsuario(CrearUsuarioDTO dto) {
         Usuario usuario = new Usuario();
         usuario.setEmail(dto.getEmail());
         usuario.setNombreUsuario(dto.getNombreUsuario());
         usuario.setContrasena(passwordEncoder.encode(dto.getContrasena()));
-        usuario.setRol(Rol.cliente);
+        usuario.setRol(dto.getRol());
         return usuarioRepository.save(usuario);
     }
 
-    public AuthenticationDTO login(UsuarioDTO usuarioDTO) {
-        Usuario usuario;
-        try {
-            usuario = (Usuario) loadUserByUsername(usuarioDTO.getNombreUsuario());
-        } catch (UsernameNotFoundException e) {
-            return AuthenticationDTO.builder()
-                    .token(null)
-                    .mensaje("Usuario no encontrado")
-                    .build();
-        }
 
-        if (!validarContrasena(usuario, usuarioDTO.getContrasena())) {
-            return AuthenticationDTO.builder()
-                    .token(null)
-                    .mensaje("Contraseña no válida")
-                    .build();
-        }
-
-        String apiKey;
-        if (usuario.getToken() == null || jwtServicio.isTokenExpired(usuario.getToken().getToken())) {
-            apiKey = jwtServicio.generateToken(usuario, usuario.getId(), usuario.getRol().name());
-            TokenAcceso token = Optional.ofNullable(usuario.getToken()).orElse(new TokenAcceso());
-            token.setUsuario(usuario);
-            token.setToken(apiKey);
-            token.setExpiracion(LocalDateTime.now().plusDays(1));
-            token.setEsValido(true);
-            tokenService.save(token);
-        } else {
-            apiKey = usuario.getToken().getToken();
-        }
-
-        return AuthenticationDTO.builder()
-                .token(apiKey)
-                .mensaje("Login exitoso")
-                .build();
+    public Usuario guardarUsuario(Usuario usuario) {
+        return usuarioRepository.save(usuario);
     }
 
-    public AuthenticationDTO register(UsuarioDTO usuarioDTO) {
-        if (usuarioRepository.findTopByNombreUsuario(usuarioDTO.getNombreUsuario()).isPresent()) {
-            return AuthenticationDTO.builder()
-                    .token(null)
-                    .mensaje("El nickname ya está en uso")
-                    .build();
-        }
 
-        Usuario usuario = new Usuario();
-        usuario.setNombreUsuario(usuarioDTO.getNombreUsuario());
-        usuario.setEmail(usuarioDTO.getEmail());
-        usuario.setContrasena(passwordEncoder.encode(usuarioDTO.getContrasena()));
-        usuario.setRol(Rol.cliente);
-        usuarioRepository.save(usuario);
-
-        Cliente cliente = new Cliente();
-        cliente.setUsuario(usuario);
-        clienteRepository.save(cliente);
-
-        String jwtToken = jwtServicio.generateToken(usuario, usuario.getId(), usuario.getRol().name());
-        return AuthenticationDTO.builder()
-                .token(jwtToken)
-                .mensaje("Registro exitoso")
-                .build();
+    @Transactional
+    public void borrarCliente(Integer id) {
+        clienteRepository.findById(id)
+                .ifPresent(clienteRepository::delete);
     }
 
-    public boolean validarContrasena(Usuario usuario, String contrasenaSinEncriptar) {
-        return passwordEncoder.matches(contrasenaSinEncriptar, usuario.getContrasena());
-    }
 
-    public Rol obtenerRolPorIdUsuario(Integer id) {
-        Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
-        return usuario.getRol();
-    }
 
-    public Usuario getById(Integer id) {
-        return usuarioRepository.findById(id).orElse(null);
-    }
 
-    public void updateUsuario(Usuario usuario) {
-        usuarioRepository.save(usuario);
-    }
+
 }
