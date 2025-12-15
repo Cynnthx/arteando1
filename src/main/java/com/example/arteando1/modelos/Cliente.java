@@ -3,6 +3,7 @@ package com.example.arteando1.modelos;
 import jakarta.persistence.*;
 import lombok.*;
 
+
 //, catalog = "postgres"
 @Entity
 @Table(name = "clientes", schema = "app_arteando")
@@ -11,6 +12,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode
+@Builder
 public class Cliente {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
