@@ -4,12 +4,14 @@ import com.example.arteando1.servicios.UsuarioServicio;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -37,12 +39,22 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // 🔓 Endpoints públicos (sin token)
                         .requestMatchers(
-                                "/api/usuarios/registro",
                                 "/api/usuarios/login",
-                                "/api/categorias/**",
+                                "/api/usuarios/registro/cliente",
+                                "/api/tests/listar",
+
+                                "/api/categorias/listar",
+
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**"
                         ).permitAll()
+
+                        // Rutas protegidas para clientes autenticados
+                        .requestMatchers(HttpMethod.GET, "/api/clientes/perfil").authenticated()
+                        //                                "/api/usuarios/perfil",
+                        .requestMatchers(HttpMethod.PUT, "/api/clientes/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/tests/crear").hasAuthority("admin")
+
 
                         // 🔒 Cualquier otro endpoint requiere autenticación JWT
                         .anyRequest().authenticated()
@@ -67,4 +79,7 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
+
+
 }
