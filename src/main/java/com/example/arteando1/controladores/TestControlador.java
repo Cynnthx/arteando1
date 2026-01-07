@@ -3,7 +3,6 @@ package com.example.arteando1.controladores;
 import com.example.arteando1.dtos.TestCompletoDTO;
 import com.example.arteando1.dtos.TestCrearDTO;
 import com.example.arteando1.dtos.TestDTO;
-import com.example.arteando1.modelos.Test;
 import com.example.arteando1.servicios.TestServicio;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -25,7 +24,7 @@ public class TestControlador {
     }
 
     //Listar todos los tests
-    @GetMapping
+    @GetMapping("/listar")
     public ResponseEntity<List<TestDTO>> obtenerTodos() {
         return ResponseEntity.ok(testServicio.obtenerTodos());
     }
