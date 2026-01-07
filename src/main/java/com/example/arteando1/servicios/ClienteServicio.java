@@ -9,6 +9,7 @@ import com.example.arteando1.repositorios.ClienteRepositorio;
 import com.example.arteando1.repositorios.UsuarioRepositorio;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import jakarta.transaction.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,54 +18,69 @@ import java.util.Optional;
 @AllArgsConstructor
 public class ClienteServicio {
 
-
-    private final ClienteRepositorio clienteRepository;
+    private final ClienteRepositorio clienteRepositorio;
     private final UsuarioRepositorio usuarioRepositorio;
 
-    // Obtener la imagen de perfil del cliente
-    public ImagenDTO getImagenById(Integer id) {
-        Cliente cliente = clienteRepository.findByUsuarioId(id)
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado para el usuario ID: " + id));
+    // --------------------------
+    // Obtener la imagen de perfil del cliente por usuarioId
+    // --------------------------
+    public ImagenDTO getImagenById(Integer usuarioId) {
+        Cliente cliente = clienteRepositorio.findByUsuarioId(usuarioId)
+                .orElseThrow(() -> new RuntimeException("Cliente no encontrado para el usuario ID: " + usuarioId));
         return new ImagenDTO(cliente.getFoto());
     }
 
-    //Todos los clientes
+    // --------------------------
+    // Obtener todos los clientes
+    // --------------------------
     public List<ClienteDTO> findAll() {
-        return clienteRepository.findAll().stream()
+        return clienteRepositorio.findAll().stream()
                 .map(ClienteDTO::new)
                 .toList();
     }
 
-    // Buscar cliente por ID
+    // --------------------------
+    // Obtener cliente por ID
+    // --------------------------
     public Optional<ClienteDTO> findById(Integer id) {
-        return clienteRepository.findById(id)
+        return clienteRepositorio.findById(id)
                 .map(ClienteDTO::new);
     }
 
-    // Crear un nuevo cliente
-    public ClienteDTO crearCliente(CrearClienteDTO clienteDTO) {
-        Cliente cliente = new Cliente();
+    // --------------------------
+    // Crear cliente + usuario
+    // --------------------------
+    @Transactional
+    public ClienteDTO crearCliente(CrearClienteDTO dto) {
 
-        cliente.setNombre(clienteDTO.getNombre());
-        cliente.setApellidos(clienteDTO.getApellidos());
-        cliente.setDni(clienteDTO.getDni());
-        cliente.setFoto(clienteDTO.getFoto());
-        cliente.setDireccion(clienteDTO.getDireccion());
+        // Crear entidad Cliente
+        Cliente cliente = dto.toEntity();
 
-        // Asociar usuario si existe
-        if (clienteDTO.getUsuarioId() != null) {
-            Usuario usuario = usuarioRepositorio.findById(clienteDTO.getUsuarioId())
-                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + clienteDTO.getUsuarioId()));
-            cliente.setUsuario(usuario);
-        }
+        // Crear usuario asociado
+        Usuario usuario = new Usuario();
+        usuario.setEmail(dto.getEmail());
+        usuario.setNombreUsuario(dto.getNombreUsuario());
+        usuario.setContrasena(dto.getContrasena());
+        usuario.setRol(dto.getRol());
 
-        Cliente clienteGuardado = clienteRepository.save(cliente);
+        usuarioRepositorio.save(usuario);
+
+        // Asociar usuario al cliente
+        cliente.setUsuario(usuario);
+
+        Cliente clienteGuardado = clienteRepositorio.save(cliente);
+
         return new ClienteDTO(clienteGuardado);
     }
 
-    public ClienteDTO actualizarCliente(Integer id, ClienteDTO dto) {
-        Cliente cliente = clienteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado con ID: " + id));
+    // --------------------------
+    // Actualizar cliente y datos del usuario
+    // --------------------------
+    @Transactional
+    public ClienteDTO actualizarClientePerfil(Integer usuarioId, CrearClienteDTO dto) {
+
+        Cliente cliente = clienteRepositorio.findByUsuarioId(usuarioId)
+                .orElseThrow(() -> new RuntimeException("Cliente no encontrado para el usuario ID: " + usuarioId));
 
         cliente.setNombre(dto.getNombre());
         cliente.setApellidos(dto.getApellidos());
@@ -72,46 +88,32 @@ public class ClienteServicio {
         cliente.setFoto(dto.getFoto());
         cliente.setDireccion(dto.getDireccion());
 
-        Cliente clienteActualizado = clienteRepository.save(cliente);
+        Usuario usuario = cliente.getUsuario();
+        if (usuario != null) {
+            usuario.setEmail(dto.getEmail());
+            usuario.setNombreUsuario(dto.getNombreUsuario());
+            usuario.setContrasena(dto.getContrasena());
+            usuarioRepositorio.save(usuario);
+        }
+
+        Cliente clienteActualizado = clienteRepositorio.save(cliente);
 
         return new ClienteDTO(clienteActualizado);
     }
 
-
-    public void eliminarCliente(Integer id) {
-        clienteRepository.deleteById(id);
-    }
-
-
-
-    // Obtener perfil completo del cliente
-    public ClienteDTO getClientePerfil(Integer id) {
-        Cliente cliente = clienteRepository.findByUsuarioId(id)
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
-
-        Usuario usuario = cliente.getUsuario();
-
+    // --------------------------
+    // Obtener cliente completo por usuarioId
+    // --------------------------
+    public ClienteDTO getClientePerfil(Integer usuarioId) {
+        Cliente cliente = clienteRepositorio.findByUsuarioId(usuarioId)
+                .orElseThrow(() -> new RuntimeException("Cliente no encontrado para el usuario ID: " + usuarioId));
         return new ClienteDTO(cliente);
-
     }
-//
-//    public Optional<ClienteDTO> actualizarClientePerfil(Integer id, CrearClienteDTO clienteDTO) {
-//        return clienteRepository.findByUsuarioId(id)
-//                .map(cliente -> {
-//                    cliente.setFoto(clienteDTO.getFoto());
-//                    cliente.setDni(clienteDTO.getDni());
-//                    cliente.setNombre(clienteDTO.getNombre());
-//                    cliente.setApellidos(clienteDTO.getApellidos());
-//                    cliente.setDireccion(clienteDTO.getDireccion());
-//
-//                    Usuario usuario = cliente.getUsuario();
-//                    usuario.setEmail(clienteDTO.getUsuario().getEmail());
-//                    usuario.setNombreUsuario(clienteDTO.getUsuario().getNickname());
-//                    usuarioServicio.actualizarUsuario(usuario);
-//
-//                    return new ClienteDTO(clienteRepository.save(cliente));
-//                });
-//    }
+
+    // --------------------------
+    // Eliminar cliente
+    // --------------------------
+    public void eliminarCliente(Integer id) {
+        clienteRepositorio.deleteById(id);
+    }
 }
-
-
