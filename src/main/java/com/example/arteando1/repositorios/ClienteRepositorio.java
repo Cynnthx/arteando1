@@ -12,10 +12,7 @@ public interface ClienteRepositorio extends JpaRepository<Cliente, Integer> {
 
     Optional<Cliente> findByUsuario(Usuario usuario);
 
-    // Método para verificar si un DNI ya existe
+    Optional<Cliente> findByUsuarioId(Integer usuarioId);
+
     boolean existsByDni(String dni);
-
-
-    Optional<Object> findByUsuarioId(Integer usuarioId);
-
 }
