@@ -43,10 +43,10 @@ public class ClienteControlador {
     }
 
     // Actualizar un cliente existente
-    @PutMapping("/{clienteId}")
-    public ClienteDTO editarCliente(@PathVariable Integer clienteId, @RequestBody @Valid ClienteDTO dto) throws Exception {
-        ClienteDTO clienteDTO = clienteServicio.actualizarCliente(clienteId, dto);
-        return clienteDTO;
+    @PutMapping("/{usuarioId}")
+    public ResponseEntity<ClienteDTO> editarCliente(@PathVariable("usuarioId") Integer usuarioId, @RequestBody @Valid CrearClienteDTO dto) throws Exception {
+        ClienteDTO clienteDTO = clienteServicio.actualizarClientePerfil(usuarioId, dto);
+        return new ResponseEntity<>(clienteDTO, HttpStatus.OK);
     }
 
     // Eliminar un cliente por su ID
