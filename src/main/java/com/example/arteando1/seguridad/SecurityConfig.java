@@ -43,6 +43,7 @@ public class SecurityConfig {
                                 "/api/usuarios/registro/cliente",
                                 "/api/tests/listar",
 
+
                                 "/api/categorias/listar",
 
                                 "/swagger-ui/**",
@@ -54,6 +55,8 @@ public class SecurityConfig {
                         //                                "/api/usuarios/perfil",
                         .requestMatchers(HttpMethod.PUT, "/api/clientes/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/tests/crear").hasAuthority("admin")
+                        .requestMatchers(HttpMethod.GET, "/api/clientes/usuario/**").authenticated()
+
 
 
                         // 🔒 Cualquier otro endpoint requiere autenticación JWT
