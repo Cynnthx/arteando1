@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/progreso-test")
+@RequestMapping("/api/progreso-test")
 @AllArgsConstructor
 public class ProgresoTestControlador {
     private final ProgresoTestServicio progresoTestServicio;
