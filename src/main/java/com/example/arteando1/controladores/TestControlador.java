@@ -3,10 +3,12 @@ package com.example.arteando1.controladores;
 import com.example.arteando1.dtos.TestCompletoDTO;
 import com.example.arteando1.dtos.TestCrearDTO;
 import com.example.arteando1.dtos.TestDTO;
+import com.example.arteando1.modelos.Test;
 import com.example.arteando1.servicios.TestServicio;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,9 +20,10 @@ public class TestControlador {
 
     //Crear un nuevo test
     @PostMapping("/crear")
-    public ResponseEntity<TestDTO> crearTest(@RequestBody TestCrearDTO dto) {
-        TestDTO nuevo = testServicio.crearTest(dto);
-        return new ResponseEntity<>(nuevo, HttpStatus.CREATED);
+    @PreAuthorize("hasAuthority('admin')")
+    public ResponseEntity<TestDTO> crearTest(@RequestBody Test test) {
+        TestDTO nuevo = testServicio.crearTest(test);
+        return ResponseEntity.ok(nuevo);
     }
 
     //Listar todos los tests
