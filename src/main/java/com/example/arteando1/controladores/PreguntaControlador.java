@@ -6,6 +6,7 @@ import com.example.arteando1.servicios.PreguntaServicio;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,6 +19,7 @@ public class PreguntaControlador {
 
     // Crear
     @PostMapping("/crear")
+    @PreAuthorize("hasAuthority('admin')")
     public ResponseEntity<PreguntaDTO> crearPregunta(@RequestBody PreguntaCrearDTO dto) {
         PreguntaDTO nueva = preguntaServicio.crearPregunta(dto);
         return new ResponseEntity<>(nueva, HttpStatus.CREATED);
@@ -25,9 +27,19 @@ public class PreguntaControlador {
 
     // Actualizar
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('admin')")
     public ResponseEntity<PreguntaDTO> actualizarPregunta(@PathVariable Integer id, @RequestBody PreguntaCrearDTO dto) {
         PreguntaDTO actualizada = preguntaServicio.actualizarPregunta(id, dto);
         return ResponseEntity.ok(actualizada);
+    }
+
+
+    // Eliminar (ADMIN)
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('admin')")
+    public ResponseEntity<Void> eliminarPregunta(@PathVariable Integer id) {
+        preguntaServicio.eliminarPregunta(id);
+        return ResponseEntity.noContent().build();
     }
 
     // Obtener todas
@@ -52,10 +64,5 @@ public class PreguntaControlador {
     }
 
 
-    // Eliminar
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminarPregunta(@PathVariable Integer id) {
-        preguntaServicio.eliminarPregunta(id);
-        return ResponseEntity.noContent().build();
-    }
+
 }
