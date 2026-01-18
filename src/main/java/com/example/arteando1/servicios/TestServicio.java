@@ -26,18 +26,40 @@ public class TestServicio {
     private final PreguntaRepositorio preguntaRepositorio;
 
     // Crear un nuevo test
-    public TestDTO crearTest(TestCrearDTO dto) {
-        Categoria categoria = categoriaRepositorio.findById(dto.getCategoriaId())
-                .orElseThrow(() -> new RuntimeException("Categoría no encontrada con ID: " + dto.getCategoriaId()));
+    public TestDTO crearTest(Test test) {
 
-        Test test = new Test();
-        test.setTitulo(dto.getTitulo());
-        test.setDescripcion(dto.getDescripcion());
-        test.setDificultad(dto.getDificultad());
-        test.setCategoria(categoria);
+        // Validación básica (ejemplo)
+        if (test.getTitulo() == null || test.getTitulo().isBlank()) {
+            throw new IllegalArgumentException("El título del test es obligatorio");
+        }
 
-        Test guardado = testRepositorio.save(test);
-        return new TestDTO(guardado);
+        if (test.getCategoria() == null) {
+            throw new IllegalArgumentException("El test debe tener una categoría");
+        }
+
+        return new TestDTO(testRepositorio.save(test));
+    }
+
+    // Actualizar un test
+    public Optional<TestDTO> actualizarTest(Integer id, Test testDetalles) {
+        return testRepositorio.findById(id)
+                .map(test -> {
+                    test.setTitulo(testDetalles.getTitulo());
+                    test.setDescripcion(testDetalles.getDescripcion());
+                    test.setDificultad(testDetalles.getDificultad());
+                    test.setCategoria(testDetalles.getCategoria());
+
+                    return new TestDTO(testRepositorio.save(test));
+                });
+    }
+
+    // Eliminar un test
+    public void eliminarTest(Integer id) {
+
+        // Primero eliminar preguntas asociadas
+        preguntaRepositorio.deleteByTestId(id);
+
+        testRepositorio.deleteById(id);
     }
 
 
@@ -100,8 +122,4 @@ public class TestServicio {
     }
 
 
-    // liminar un test
-    public void eliminarTest(Integer id) {
-        testRepositorio.deleteById(id);
-    }
 }
