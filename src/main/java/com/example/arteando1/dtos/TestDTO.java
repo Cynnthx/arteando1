@@ -15,16 +15,15 @@ public class TestDTO {
     private String dificultad;
     private String categoriaNombre; // para devolver el nombre
 
-    public TestDTO(Test t) {
-        if (t == null) return;
 
-        this.id = t.getId();
-        this.titulo = t.getTitulo();
-        this.descripcion = t.getDescripcion();
-        this.dificultad = t.getDificultad();
-
-        if (t.getCategoria() != null) {
-            this.categoriaNombre = t.getCategoria().getNombre();
+    public TestDTO (Test test) {
+        this.id = test.getId();
+        this.titulo = test.getTitulo();
+        this.descripcion = test.getDescripcion();
+        this.dificultad = test.getDificultad();
+        if (test.getCategoria() != null) {
+            this.categoriaNombre = test.getCategoria().getNombre();
         }
     }
+
 }
