@@ -10,5 +10,8 @@ import java.util.List;
 public interface PreguntaRepositorio extends JpaRepository<Pregunta, Integer> {
     List<Pregunta> findByTestId(Integer testId);
 
+    long countByTestId(Integer testId);
+
+    void deleteByTestId(Integer testId);
 
 }
