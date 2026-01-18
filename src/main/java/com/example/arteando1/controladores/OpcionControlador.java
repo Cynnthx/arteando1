@@ -6,6 +6,7 @@ import com.example.arteando1.servicios.OpcionServicio;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,6 +19,7 @@ public class OpcionControlador {
 
     // Crear opción
     @PostMapping("/crear")
+    @PreAuthorize("hasAuthority('admin')")
     public ResponseEntity<OpcionDTO> crearOpcion(@RequestBody OpcionCrearDTO dto) {
         OpcionDTO nueva = opcionServicio.crearOpcion(dto);
         return new ResponseEntity<>(nueva, HttpStatus.CREATED);
@@ -25,6 +27,7 @@ public class OpcionControlador {
 
     // Actualizar opción
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('admin')")
     public ResponseEntity<OpcionDTO> actualizarOpcion(@PathVariable Integer id, @RequestBody OpcionCrearDTO dto) {
         OpcionDTO actualizada = opcionServicio.actualizarOpcion(id, dto);
         return ResponseEntity.ok(actualizada);
@@ -44,8 +47,9 @@ public class OpcionControlador {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // Eliminar
+    // Eliminar opcion Admin
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('admin')")
     public ResponseEntity<Void> eliminarOpcion(@PathVariable Integer id) {
         opcionServicio.eliminarOpcion(id);
         return ResponseEntity.noContent().build();
