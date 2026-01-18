@@ -15,14 +15,20 @@ public class OpcionDTO {
     private Integer preguntaId;
     private String preguntaTexto;
 
+
+    private String preguntaTestTitulo; // para devolver el título del test asociado a la pregunta
+
+
     public OpcionDTO(Opcion o) {
-        if (o == null) return;
         this.id = o.getId();
         this.texto = o.getTexto();
         this.esCorrecta = o.getEsCorrecta();
         if (o.getPregunta() != null) {
             this.preguntaId = o.getPregunta().getId();
             this.preguntaTexto = o.getPregunta().getTexto();
+            if (o.getPregunta().getTest() != null) {
+                this.preguntaTestTitulo = o.getPregunta().getTest().getTitulo();
+            }
         }
     }
 }
