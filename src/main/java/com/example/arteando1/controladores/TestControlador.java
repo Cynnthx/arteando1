@@ -21,10 +21,11 @@ public class TestControlador {
     //Crear un nuevo test
     @PostMapping("/crear")
     @PreAuthorize("hasAuthority('admin')")
-    public ResponseEntity<TestDTO> crearTest(@RequestBody Test test) {
-        TestDTO nuevo = testServicio.crearTest(test);
+    public ResponseEntity<TestDTO> crearTest(@RequestBody TestCrearDTO dto) {
+        TestDTO nuevo = testServicio.crearTest(dto);
         return ResponseEntity.ok(nuevo);
     }
+
 
     //Listar todos los tests
     @GetMapping("/listar")
