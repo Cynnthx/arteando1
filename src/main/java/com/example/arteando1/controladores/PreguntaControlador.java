@@ -1,5 +1,6 @@
 package com.example.arteando1.controladores;
 
+import com.example.arteando1.dtos.PreguntaConOpcionesDTO;
 import com.example.arteando1.dtos.PreguntaCrearDTO;
 import com.example.arteando1.dtos.PreguntaDTO;
 import com.example.arteando1.servicios.PreguntaServicio;
@@ -58,8 +59,9 @@ public class PreguntaControlador {
 
     // Obtener preguntas por testId
     @GetMapping("/test/{testId}")
-    public ResponseEntity<List<PreguntaDTO>> obtenerPorTest(@PathVariable Integer testId) {
-        List<PreguntaDTO> preguntas = preguntaServicio.obtenerPorTest(testId);
+    public ResponseEntity<List<PreguntaConOpcionesDTO>> obtenerPorTest(@PathVariable Integer testId) {
+        // Necesitas un método en el servicio que llene las opciones de cada pregunta
+        List<PreguntaConOpcionesDTO> preguntas = preguntaServicio.obtenerPreguntasConOpcionesPorTest(testId);
         return ResponseEntity.ok(preguntas);
     }
 
