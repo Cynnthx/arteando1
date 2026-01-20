@@ -59,10 +59,9 @@ public class PreguntaControlador {
 
     // Obtener preguntas por testId
     @GetMapping("/test/{testId}")
+    @PreAuthorize("hasAuthority('admin')")
     public ResponseEntity<List<PreguntaConOpcionesDTO>> obtenerPorTest(@PathVariable Integer testId) {
-        // Necesitas un método en el servicio que llene las opciones de cada pregunta
-        List<PreguntaConOpcionesDTO> preguntas = preguntaServicio.obtenerPreguntasConOpcionesPorTest(testId);
-        return ResponseEntity.ok(preguntas);
+        return ResponseEntity.ok(preguntaServicio.obtenerPreguntasConOpcionesPorTest(testId));
     }
 
 
