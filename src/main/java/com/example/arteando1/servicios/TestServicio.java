@@ -26,19 +26,44 @@ public class TestServicio {
     private final PreguntaRepositorio preguntaRepositorio;
 
     // Crear un nuevo test
-    public TestDTO crearTest(Test test) {
+    public TestDTO crearTest(TestCrearDTO dto) {
 
-        // Validación básica (ejemplo)
-        if (test.getTitulo() == null || test.getTitulo().isBlank()) {
+        // VALIDACIONES
+
+        if (dto.getTitulo() == null || dto.getTitulo().isBlank()) {
             throw new IllegalArgumentException("El título del test es obligatorio");
         }
 
-        if (test.getCategoria() == null) {
-            throw new IllegalArgumentException("El test debe tener una categoría");
+        if (dto.getDescripcion() == null || dto.getDescripcion().isBlank()) {
+            throw new IllegalArgumentException("La descripción del test es obligatoria");
         }
 
-        return new TestDTO(testRepositorio.save(test));
+        if (dto.getDificultad() == null || dto.getDificultad().isBlank()) {
+            throw new IllegalArgumentException("La dificultad del test es obligatoria");
+        }
+
+        if (dto.getCategoriaId() == null) {
+            throw new IllegalArgumentException("Debe seleccionar una categoría para el test");
+        }
+
+        // BUSCAR LA CATEGORÍA EN BD
+        Categoria categoria = categoriaRepositorio.findById(dto.getCategoriaId())
+                .orElseThrow(() -> new RuntimeException("Categoría no encontrada con ID: " + dto.getCategoriaId()));
+
+        // CREAR ENTIDAD TEST
+        Test test = new Test();
+        test.setTitulo(dto.getTitulo().trim());
+        test.setDescripcion(dto.getDescripcion().trim());
+        test.setDificultad(dto.getDificultad().trim());
+        test.setCategoria(categoria);
+
+        // GUARDAR EN BD
+        Test guardado = testRepositorio.save(test);
+
+        // DEVOLVER DTO CON NOMBRE DE CATEGORÍA
+        return new TestDTO(guardado);
     }
+
 
     // Actualizar un test
     public Optional<TestDTO> actualizarTest(Integer id, Test testDetalles) {
