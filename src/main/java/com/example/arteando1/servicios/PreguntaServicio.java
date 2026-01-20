@@ -1,5 +1,7 @@
 package com.example.arteando1.servicios;
 
+import com.example.arteando1.dtos.OpcionDTO;
+import com.example.arteando1.dtos.PreguntaConOpcionesDTO;
 import com.example.arteando1.dtos.PreguntaCrearDTO;
 import com.example.arteando1.dtos.PreguntaDTO;
 import com.example.arteando1.modelos.Pregunta;
@@ -83,6 +85,29 @@ public class PreguntaServicio {
     // Obtener una pregunta por ID
     public Optional<PreguntaDTO> obtenerPorId(Integer id) {
         return preguntaRepositorio.findById(id).map(PreguntaDTO::new);
+    }
+
+
+    // Obtener preguntas con opciones por testId
+    public List<PreguntaConOpcionesDTO> obtenerPreguntasConOpcionesPorTest(Integer testId) {
+        // 1. Buscamos todas las preguntas del test
+        List<Pregunta> preguntas = preguntaRepositorio.findByTestId(testId);
+
+        // 2. Convertimos cada Pregunta en un PreguntaConOpcionesDTO
+        return preguntas.stream().map(p -> {
+            // Buscamos las opciones de esta pregunta específica
+            List<OpcionDTO> opciones = opcionRepositorio.findByPreguntaId(p.getId())
+                    .stream()
+                    .map(OpcionDTO::new) // Uso el constructor que tengo en OpcionDTO
+                    .toList();
+
+            return new PreguntaConOpcionesDTO(
+                    p.getId(),
+                    p.getTexto(),
+                    p.getImagen(),
+                    opciones
+            );
+        }).toList();
     }
 
     public List<PreguntaDTO> obtenerPorTest(Integer testId) {
