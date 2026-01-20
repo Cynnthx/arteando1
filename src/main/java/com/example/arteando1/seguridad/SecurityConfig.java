@@ -47,6 +47,10 @@ public class SecurityConfig {
                                 "/v3/api-docs/**"
                         ).permitAll()
 
+                        // Permitir que usuarios logueados (Admin y Cliente) vean preguntas y opciones
+                        .requestMatchers(HttpMethod.GET, "/api/preguntas/test/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/opciones/pregunta/**").authenticated()
+
                         // Rutas protegidas para clientes autenticados
                         .requestMatchers(HttpMethod.GET, "/api/clientes/perfil").authenticated()
                         //                                "/api/usuarios/perfil",
