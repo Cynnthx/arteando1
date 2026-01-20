@@ -56,6 +56,8 @@ public class TestControlador {
 
 
     // Eliminar un test
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('admin')")
     public ResponseEntity<Void> eliminarTest(@PathVariable Integer id) {
         testServicio.eliminarTest(id);
         return ResponseEntity.noContent().build();
