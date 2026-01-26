@@ -33,8 +33,6 @@ public class ClienteControlador {
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
-
-
     // Crear un nuevo cliente
     @PostMapping("/crear")
     public ResponseEntity<ClienteDTO> crearCliente(@RequestBody CrearClienteDTO clienteDTO) {
@@ -55,4 +53,6 @@ public class ClienteControlador {
         clienteServicio.eliminarCliente(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
+
 }
