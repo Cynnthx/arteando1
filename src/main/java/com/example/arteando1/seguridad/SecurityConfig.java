@@ -57,6 +57,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/clientes/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/clientes/usuario/**").authenticated()
 
+                        .requestMatchers("/api/puntajes-usuario/**").authenticated()
+
                         //RUTAS ADMIN PARA TEST
                         .requestMatchers(HttpMethod.POST, "/api/tests/crear").hasAuthority("admin")
                         .requestMatchers(HttpMethod.PUT, "/api/tests/**").hasAuthority("admin")
