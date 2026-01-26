@@ -23,6 +23,12 @@ public class PuntajeUsuarioControlador {
         return new ResponseEntity<>(nuevo, HttpStatus.CREATED);
     }
 
+    //obtener el total
+    @GetMapping("/usuario/{usuarioId}/total")
+    public ResponseEntity<Integer> obtenerTotal(@PathVariable Integer usuarioId) {
+        return ResponseEntity.ok(puntajeUsuarioServicio.obtenerPuntajeTotalPorUsuario(usuarioId));
+    }
+
     // Actualizar
     @PutMapping("/{id}")
     public ResponseEntity<PuntajeUsuarioDTO> actualizar(@PathVariable Integer id, @RequestBody PuntajeUsuarioCrearDTO dto) {
