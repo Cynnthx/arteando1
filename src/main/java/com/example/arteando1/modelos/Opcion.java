@@ -20,7 +20,6 @@ public class Opcion {
     @Column(name = "texto", nullable = false, length = 200)
     private String texto;
 
-    // Usamos boolean para facilitar la lógica en Java/Frontend
     @Column(name = "es_correcta", nullable = false)
     private Boolean esCorrecta;
 
