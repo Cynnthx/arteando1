@@ -23,19 +23,44 @@ public class PuntajeUsuarioServicio {
 
     // Crear nuevo puntaje
     public PuntajeUsuarioDTO crearPuntaje(PuntajeUsuarioCrearDTO dto) {
-        Usuario usuario = usuarioRepositorio.findById(dto.getUsuarioId())
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + dto.getUsuarioId()));
+        // 1. Buscamos si ya existe un registro para este usuario y este test
+        return puntajeUsuarioRepositorio.findAll().stream()
+                .filter(p -> p.getUsuario().getId().equals(dto.getUsuarioId()) &&
+                        p.getTest().getId().equals(dto.getTestId()))
+                .findFirst()
+                .map(existente -> {
+                    // 2. Si ya existe, comprobamos si la nueva nota es mejor
+                    if (dto.getPuntaje() > existente.getPuntaje()) {
+                        existente.setPuntaje(dto.getPuntaje());
+                        PuntajeUsuario actualizado = puntajeUsuarioRepositorio.save(existente);
+                        return new PuntajeUsuarioDTO(actualizado);
+                    }
+                    // Si no es mejor nota, devolvemos la que ya había sin guardar nada nuevo
+                    return new PuntajeUsuarioDTO(existente);
+                })
+                .orElseGet(() -> {
+                    // 3. Si NO existe (es la primera vez que hace el test), creamos el registro
+                    Usuario usuario = usuarioRepositorio.findById(dto.getUsuarioId())
+                            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        Test test = testRepositorio.findById(dto.getTestId())
-                .orElseThrow(() -> new RuntimeException("Test no encontrado con ID: " + dto.getTestId()));
+                    Test test = testRepositorio.findById(dto.getTestId())
+                            .orElseThrow(() -> new RuntimeException("Test no encontrado"));
 
-        PuntajeUsuario puntaje = new PuntajeUsuario();
-        puntaje.setPuntaje(dto.getPuntaje());
-        puntaje.setUsuario(usuario);
-        puntaje.setTest(test);
+                    PuntajeUsuario nuevoPuntaje = new PuntajeUsuario();
+                    nuevoPuntaje.setPuntaje(dto.getPuntaje());
+                    nuevoPuntaje.setUsuario(usuario);
+                    nuevoPuntaje.setTest(test);
 
-        PuntajeUsuario guardado = puntajeUsuarioRepositorio.save(puntaje);
-        return new PuntajeUsuarioDTO(guardado);
+                    PuntajeUsuario guardado = puntajeUsuarioRepositorio.save(nuevoPuntaje);
+                    return new PuntajeUsuarioDTO(guardado);
+                });
+    }
+
+    public Integer obtenerPuntajeTotalPorUsuario(Integer usuarioId) {
+        return puntajeUsuarioRepositorio.findAll().stream()
+                .filter(p -> p.getUsuario().getId().equals(usuarioId))
+                .mapToInt(PuntajeUsuario::getPuntaje)
+                .sum();
     }
 
     // Actualizar puntaje existente
